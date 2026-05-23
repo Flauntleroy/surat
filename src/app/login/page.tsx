@@ -1,4 +1,5 @@
 import { signIn } from "@/lib/auth";
+import Image from "next/image";
 
 export default function LoginPage() {
   return (
@@ -32,7 +33,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <img src="/LogoDWP.png" alt="Logo DWP" className="mx-auto mb-4 h-16 w-16 rounded-xl object-contain" />
+          <Image src="/LogoDWP.png" alt="Logo DWP" width={64} height={64} className="mx-auto mb-4 rounded-xl object-contain" priority />
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">Nomor Surat DWP</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Sistem Penomoran Surat Digital</p>
         </div>
