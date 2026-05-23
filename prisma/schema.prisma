@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(MEMBER)
+  accounts      Account[]
+  sessions      Session[]
+  letters       Letter[]
+  activities    ActivityLog[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model LetterTemplate {
+  id            String   @id @default(cuid())
+  name          String
+  format        String
+  prefix        String?
+  division      String?
+  category      String   @default("Surat Keluar") // Surat Masuk, Surat Keluar, Undangan, SK, dll
+  isDefault     Boolean  @default(false)
+  resetYearly   Boolean  @default(true)
+  letters       Letter[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Letter {
+  id           String         @id @default(cuid())
+  number       Int
+  letterYear   Int            @default(0)
+  generatedNo  String
+  subject      String
+  recipient    String?
+  notes        String?        @db.Text
+  category     String         @default("Surat Keluar")
+  templateId   String
+  template     LetterTemplate @relation(fields: [templateId], references: [id])
+  userId       String
+  user         User           @relation(fields: [userId], references: [id])
+  letterDate   DateTime       @default(now())
+  attachments  Attachment[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([templateId, number, letterYear])
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  letterId   String
+  letter     Letter   @relation(fields: [letterId], references: [id], onDelete: Cascade)
+  fileName   String
+  fileUrl    String
+  fileSize   Int
+  mimeType   String
+  createdAt  DateTime @default(now())
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String   // CREATE, UPDATE, DELETE
+  entity      String   // LETTER, TEMPLATE
+  entityId    String?
+  description String
+  metadata    String?  @db.Text // JSON string for extra data
+  createdAt   DateTime @default(now())
+}
